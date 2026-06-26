@@ -1,33 +1,90 @@
-# dragterm 1.1
+# dragterm
 
-Drag and drop from the command-line, updated to use modern API.
+Drag and drop from the command line. Run `drag <files>` and a file icon appears
+under your cursor — move it where you want, click to drop.
 
-The tool itself is called “`drag`”, as that's a lot nicer to type than “`dragterm`”.
+This is a fork of [Wevah/dragterm](https://github.com/Wevah/dragterm), which
+itself is a modernized rewrite of [ciaran/drag](https://github.com/ciaran/drag)
+(updated to use modern AppKit drag-and-drop APIs, since starting a drag without
+a view no longer works on current macOS).
+
+## Features
+
+- **Cursor-following icon.** The icon tracks your cursor so you can position it
+  freely before dropping — no need to hold the button while moving.
+- **Shift to passthrough.** Hold **Shift** to fade the icon and let clicks pass
+  through to whatever is behind it (Finder, desktop, other apps). Release Shift
+  to bring the icon back and drop.
+- **Keyboard cancel.** Press `Esc`, `q`, `Ctrl-C`, or `Ctrl-D` to cancel. The
+  app runs in the background so keystrokes still reach your terminal.
+- **Multiple files.** Pass as many paths as you like.
+- **Trash support.** Drop onto the Trash to move files there.
+- **No accessibility permission required.** Cursor tracking polls
+  `NSEvent.mouseLocation`; passthrough polls the modifier flag state.
 
 ## Usage
 
-`drag <files>`
+```
+drag <files>
+```
 
-And drag the icon that appears under the mouse cursor.
+An icon appears under the cursor and follows it as you move.
 
-Pressing Escape, q, Ctrl-C, or Ctrl-D, or moving the mouse far enough from the icon before dragging will cancel.
+- **Move the cursor** → the icon follows.
+- **Hold Shift** → the icon fades and clicks pass through to apps behind it.
+- **Click and hold, drag, release** → drops the file(s) at the destination.
+- **`Esc` / `q` / `Ctrl-C` / `Ctrl-D`** → cancels.
 
-## History
+### Examples
 
-- 1.1
-	- Uses the relative path as typed when displaying a “not found” error, instead of the full path.
-	- Restored the ability to cancel with the Escape key (or `q`/`Ctrl-C`/`Ctrl-D`), without needing accessibility access.
-	- Fixes a crash when passing an unrecognized option.
-	- Prints usage to stderr instead of stdout when it's printed because of an error (vs. `--help`).
-- 1.0.2
-	- Increased drag-start area to 256 × 256.
-	- Supports dragging files to the Trash.
-	- Added `--version` and `--help` options.
-- 1.0.1
-	- Supports multiple files.
-- 1.0
-	- Initial release.
+```sh
+drag ~/Desktop/screenshot.png
+drag file1.txt file2.txt file3.txt
+drag *.png
+```
 
-## Notes
+## Building
 
-Starting a drag without a view (as <https://github.com/ciaran/drag> does) doesn't seem to work anymore, hence the transparent window appearing under the mouse (which should mostly behave the same).
+Requires Xcode (not just Command Line Tools).
+
+```sh
+xcodebuild -project dragterm.xcodeproj -scheme dragterm
+```
+
+The built binary lands under `~/Library/Developer/Xcode/DerivedData/dragterm-*/Build/Products/Debug/drag`
+(or `Release` if you pass `-configuration Release`).
+
+### Install
+
+Copy the binary somewhere in your `PATH`:
+
+```sh
+mkdir -p ~/bin
+cp ~/Library/Developer/Xcode/DerivedData/dragterm-*/Build/Products/Debug/drag ~/bin/
+```
+
+Ensure `~/bin` is on your `PATH` (add `export PATH="$HOME/bin:$PATH"` to your
+shell config), then:
+
+```sh
+drag <files>
+```
+
+### First run
+
+macOS may prompt for accessibility or input monitoring permission on first
+launch. Grant it under **System Settings → Privacy & Security**.
+
+## How it works
+
+`drag` creates a transparent, borderless window centered on the cursor and
+runs it as a background (accessory) app so the terminal keeps keyboard focus.
+The window recenters on the cursor each event tick, so the file icon follows
+your mouse without holding a button. Holding Shift toggles
+`ignoresMouseEvents` and fades the window so clicks reach apps behind it. A
+mouse-down on the icon starts a standard `NSDraggingSession` to perform the
+actual drop.
+
+## License
+
+See [LICENSE](LICENSE).
