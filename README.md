@@ -75,6 +75,52 @@ drag <files>
 macOS may prompt for accessibility or input monitoring permission on first
 launch. Grant it under **System Settings → Privacy & Security**.
 
+## Nix
+
+The flake is at `github:semi710/dragterm` and exposes the `drag` package for
+`aarch64-darwin` and `x86_64-darwin`.
+
+### Run
+
+```sh
+nix run github:semi710/dragterm -- <files>
+```
+
+### Build
+
+```sh
+nix build github:semi710/dragterm
+./result/bin/drag <files>
+```
+
+### Devshell
+
+```sh
+nix develop
+```
+
+Includes `just` and pre-commit hooks (treefmt). Use `just` to drive common tasks:
+
+```sh
+just          # list commands
+just build    # nix build .#drag
+just run FILE # nix run .#drag -- FILE
+```
+
+### As a flake input
+
+Add to your flake:
+
+```nix
+inputs.dragterm.url = "github:semi710/dragterm";
+```
+
+Then consume the package, e.g. via an overlay:
+
+```nix
+drag = inputs.dragterm.packages.${final.stdenv.hostPlatform.system}.drag;
+```
+
 ## How it works
 
 `drag` creates a transparent, borderless window centered on the cursor and
