@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <ApplicationServices/ApplicationServices.h>
 #import "DTDraggingSourceView.h"
 #import <getopt.h>
 #import <termios.h>
@@ -74,6 +75,7 @@ int main(int argc, char * const argv[]) {
 			return 1;
 
 		NSApplicationLoad();
+		[NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
 
 		NSMutableArray<NSURL *> *urls = [NSMutableArray arrayWithCapacity:argc - 1];
 
@@ -134,10 +136,24 @@ int main(int argc, char * const argv[]) {
 		info.c_cc[VTIME] = 0;
 		tcsetattr(0, TCSANOW, &info);
 
-		while (1) {
-			NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:NSDate.distantFuture inMode:NSEventTrackingRunLoopMode dequeue:YES];
-			[NSApp sendEvent:event];
+	BOOL shiftWasDown = NO;
+	while (1) {
+		NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:NSDate.distantFuture inMode:NSEventTrackingRunLoopMode dequeue:YES];
+
+		NSPoint loc = NSEvent.mouseLocation;
+		NSRect f = window.frame;
+		f.origin = (NSPoint){ loc.x - f.size.width / 2.0, loc.y - f.size.height / 2.0 };
+		[window setFrame:f display:NO];
+
+		BOOL shiftDown = (CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState) & kCGEventFlagMaskShift) != 0;
+		if (shiftDown != shiftWasDown) {
+			window.ignoresMouseEvents = shiftDown;
+			window.alphaValue = shiftDown ? 0.3 : 1.0;
+			shiftWasDown = shiftDown;
 		}
+
+		[NSApp sendEvent:event];
+	}
 	}
 
 	return 0;

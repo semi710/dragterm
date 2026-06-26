@@ -10,7 +10,6 @@
 
 @interface DTDraggingSourceView ()
 
-@property (nonatomic) NSTrackingArea *trackingArea;
 @property (nonatomic, copy)	NSImage *icon;
 
 @end
@@ -51,22 +50,11 @@ static NSRect DTCenterRect(NSRect baseRect, CGFloat rectDim) {
 	self.icon = icon;
 }
 
-- (void)viewWillMoveToWindow:(NSWindow *)newWindow {
-	NSTrackingArea *trackingArea = [[NSTrackingArea alloc] initWithRect:self.bounds options:NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways owner:self userInfo:nil];
-	[self addTrackingArea:trackingArea];
-	self.trackingArea = trackingArea;
-}
-
 - (void)drawRect:(NSRect)dirtyRect {
 	[self.icon drawInRect:DTCenterRect(self.bounds, self.iconSize)];
 }
 
-- (void)mouseExited:(NSEvent *)event {
-	[NSApp terminate:nil];
-}
-
 - (void)mouseDown:(NSEvent *)event {
-	[self removeTrackingArea:self.trackingArea];
 	[self.window orderOut:nil];
 
 	NSMutableArray<NSDraggingItem *> *items = [NSMutableArray arrayWithCapacity:self.URLs.count];
