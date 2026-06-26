@@ -1,7 +1,7 @@
 # dragterm
 
 Drag and drop from the command line. Run `drag <files>` and a file icon appears
-under your cursor — move it where you want, click to drop.
+under your cursor, move it where you want, click to drop.
 
 This is a fork of [Wevah/dragterm](https://github.com/Wevah/dragterm), which
 itself is a modernized rewrite of [ciaran/drag](https://github.com/ciaran/drag)
@@ -11,7 +11,7 @@ a view no longer works on current macOS).
 ## Features
 
 - **Cursor-following icon.** The icon tracks your cursor so you can position it
-  freely before dropping — no need to hold the button while moving.
+  freely before dropping, no need to hold the button while moving.
 - **Shift to passthrough.** Hold **Shift** to fade the icon and let clicks pass
   through to whatever is behind it (Finder, desktop, other apps). Release Shift
   to bring the icon back and drop.
