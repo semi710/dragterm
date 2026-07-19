@@ -58,6 +58,19 @@ static void signalHandler(int signum) {
 	exit(0);
 }
 
+// CGEventTap callback: cancel from any Space/app. Key codes: Esc=53, q=12, d=2.
+static CGEventRef dtKeyTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void *refcon) {
+	if (type == kCGEventKeyDown) {
+		CGKeyCode keyCode = (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+		CGEventFlags flags = CGEventGetFlags(event);
+		if (keyCode == 53 || keyCode == 12) // Esc or q
+			exit(0);
+		if (keyCode == 2 && (flags & kCGEventFlagMaskControl)) // Ctrl-D
+			exit(0);
+	}
+	return event;
+}
+
 int main(int argc, char * const argv[]) {
 	@autoreleasepool {
 		signal(SIGINT, signalHandler);
@@ -101,6 +114,7 @@ int main(int argc, char * const argv[]) {
 		window.opaque = NO;
 		window.backgroundColor = NSColor.clearColor;
 		window.level = NSStatusWindowLevel;
+		window.collectionBehavior = NSWindowCollectionBehaviorCanJoinAllSpaces;
 		window.ignoresMouseEvents = NO;
 
 		DTDraggingSourceView *sourceView = [[DTDraggingSourceView alloc] initWithFrame:frame];
@@ -128,6 +142,20 @@ int main(int argc, char * const argv[]) {
 
 			putc('\a', stderr);
 		};
+
+		// Global key tap: cancel from any Space/app. Needs Accessibility.
+		// ponytail: stdin handler above stays as fallback when Accessibility isn't granted.
+		CFMachPortRef keyTap = CGEventTapCreate(kCGSessionEventTap, kCGHeadInsertEventTap,
+			kCGEventTapOptionListenOnly, CGEventMaskBit(kCGEventKeyDown), dtKeyTapCallback, NULL);
+		if (keyTap) {
+			CFRunLoopSourceRef src = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, keyTap, 0);
+			CFRunLoopAddSource(CFRunLoopGetCurrent(), src, kCFRunLoopCommonModes);
+			CFRunLoopAddSource(CFRunLoopGetCurrent(), src, (__bridge CFStringRef)NSEventTrackingRunLoopMode);
+			CFRelease(keyTap);
+			CFRelease(src);
+		} else {
+			fprintf(stderr, "drag: Accessibility not granted; keyboard cancel works only when terminal has focus.\nRight-click the icon to cancel from any Space.\n");
+		}
 
 		struct termios info;
 		tcgetattr(0, &info);

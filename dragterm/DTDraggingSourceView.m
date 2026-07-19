@@ -54,6 +54,10 @@ static NSRect DTCenterRect(NSRect baseRect, CGFloat rectDim) {
 	[self.icon drawInRect:DTCenterRect(self.bounds, self.iconSize)];
 }
 
+- (void)rightMouseDown:(NSEvent *)event {
+	exit(0);
+}
+
 - (void)mouseDown:(NSEvent *)event {
 	[self.window orderOut:nil];
 
