@@ -19,6 +19,8 @@ a view no longer works on current macOS).
   to bring the icon back and drop.
 - **Keyboard cancel.** Press `Esc`, `q`, `Ctrl-C`, or `Ctrl-D` to cancel. The
   app runs in the background so keystrokes still reach your terminal.
+- **Right-click cancel.** Right-click the icon to cancel from any Space or
+  app - the one cancel path that needs no Accessibility permission.
 - **Multiple files.** Pass as many paths as you like.
 - **Trash support.** Drop onto the Trash to move files there.
 - **No accessibility permission required.** Cursor tracking polls
@@ -36,6 +38,7 @@ An icon appears under the cursor and follows it as you move.
 - **Hold Shift** → the icon fades and clicks pass through to apps behind it.
 - **Click and hold, drag, release** → drops the file(s) at the destination.
 - **`Esc` / `q` / `Ctrl-C` / `Ctrl-D`** → cancels.
+- **Right-click the icon** → cancels from any Space or app.
 
 ### Examples
 
@@ -76,6 +79,15 @@ drag <files>
 
 macOS may prompt for accessibility or input monitoring permission on first
 launch. Grant it under **System Settings → Privacy & Security**.
+
+## Homebrew
+
+```sh
+brew install semi710/tap/dragterm
+```
+
+Installs the prebuilt release binary from the
+[`semi710/homebrew-tap`](https://github.com/semi710/homebrew-tap) tap.
 
 ## Nix
 
