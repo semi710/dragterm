@@ -15,18 +15,12 @@ env:
 
 jobs:
   build:
-    name: Build drag (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 15
+    name: Build drag
+    # macos-13 (Intel) runners are retired; one arm runner builds both archs
+    # via Rosetta instead of waiting on scarce Intel capacity.
+    runs-on: macos-26
+    timeout-minutes: 20
     continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: aarch64-darwin
-            runner: macos-14
-          - arch: x86_64-darwin
-            runner: macos-13
     permissions:
       id-token: write
       contents: read
@@ -38,25 +32,22 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Build
-        run: nix build .#drag --print-build-logs --show-trace
-
-      - name: Stage binary
         run: |
-          mkdir -p staging
-          cp result/bin/drag "staging/drag-${{ matrix.arch }}"
-          chmod +x "staging/drag-${{ matrix.arch }}"
-
-      - name: Generate checksum
-        run: |
-          cd staging
-          shasum -a 256 drag-${{ matrix.arch }} > drag-${{ matrix.arch }}.sha256
+          for arch in aarch64-darwin x86_64-darwin; do
+            if nix build .#packages.$arch.drag --print-build-logs --show-trace; then
+              cp result/bin/drag "drag-$arch"
+              shasum -a 256 "drag-$arch" > "drag-$arch.sha256"
+            else
+              echo "::warning::Build failed for $arch; release will omit it"
+            fi
+            rm -f result
+          done
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: drag-${{ matrix.arch }}
-          path: staging/
-          retention-days: 90
+          name: drag-binaries
+          path: drag-*
 
   release:
     name: Create Release
