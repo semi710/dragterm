@@ -3,6 +3,8 @@
 Drag and drop from the command line. Run `drag <files>` and a file icon appears
 under your cursor, move it where you want, click to drop.
 
+<img width="1920" height="1241" alt="Image" src="https://github.com/user-attachments/assets/3c89a621-349b-4a21-acb3-07f9835a0602" />
+
 This is a fork of [Wevah/dragterm](https://github.com/Wevah/dragterm), which
 itself is a modernized rewrite of [ciaran/drag](https://github.com/ciaran/drag)
 (updated to use modern AppKit drag-and-drop APIs, since starting a drag without
