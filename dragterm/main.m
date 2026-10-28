@@ -164,14 +164,17 @@ int main(int argc, char * const argv[]) {
 		info.c_cc[VTIME] = 0;
 		tcsetattr(0, TCSANOW, &info);
 
-	BOOL shiftWasDown = NO;
-	while (1) {
-		NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:NSDate.distantFuture inMode:NSEventTrackingRunLoopMode dequeue:YES];
-
+	// Poll-based follow: mouseMoved delivery to a background app breaks across
+	// Space swipes until the cursor re-enters the window. A timer avoids that.
+	__block BOOL shiftWasDown = NO;
+	void (^followCursor)(void) = ^{
 		NSPoint loc = NSEvent.mouseLocation;
 		NSRect f = window.frame;
-		f.origin = (NSPoint){ loc.x - f.size.width / 2.0, loc.y - f.size.height / 2.0 };
-		[window setFrame:f display:NO];
+		NSPoint origin = (NSPoint){ loc.x - f.size.width / 2.0, loc.y - f.size.height / 2.0 };
+		if (!NSEqualPoints(origin, f.origin)) {
+			f.origin = origin;
+			[window setFrame:f display:NO];
+		}
 
 		BOOL shiftDown = (CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState) & kCGEventFlagMaskShift) != 0;
 		if (shiftDown != shiftWasDown) {
@@ -179,7 +182,17 @@ int main(int argc, char * const argv[]) {
 			window.alphaValue = shiftDown ? 0.3 : 1.0;
 			shiftWasDown = shiftDown;
 		}
+	};
+	NSTimer *followTimer = [NSTimer timerWithTimeInterval:1.0 / 60.0 repeats:YES block:^(NSTimer *t) {
+		followCursor();
+	}];
+	// Coalesced fires are fine: a few ms of lag is invisible on a drag ghost.
+	followTimer.tolerance = 0.02;
+	[[NSRunLoop currentRunLoop] addTimer:followTimer forMode:NSRunLoopCommonModes];
+	[[NSRunLoop currentRunLoop] addTimer:followTimer forMode:(NSString *)NSEventTrackingRunLoopMode];
 
+	while (1) {
+		NSEvent *event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:NSDate.distantFuture inMode:NSEventTrackingRunLoopMode dequeue:YES];
 		[NSApp sendEvent:event];
 	}
 	}
