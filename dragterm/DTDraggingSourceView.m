@@ -7,6 +7,7 @@
 //
 
 #import "DTDraggingSourceView.h"
+#import <QuickLookThumbnailing/QuickLookThumbnailing.h>
 
 @interface DTDraggingSourceView ()
 
@@ -42,8 +43,23 @@ static NSRect DTCenterRect(NSRect baseRect, CGFloat rectDim) {
 	NSImage *icon;
 
 	if (urls.count == 1) {
-		NSURL *firstUrl = urls.firstObject;
-		[firstUrl getResourceValue:&icon forKey:NSURLEffectiveIconKey error:nil];
+		NSURL *url = urls.firstObject;
+		[url getResourceValue:&icon forKey:NSURLEffectiveIconKey error:nil];
+
+		// Icon shows immediately; swap in the content thumbnail if QuickLook has one.
+		QLThumbnailGenerationRequest *request = [[QLThumbnailGenerationRequest alloc] initWithFileAtURL:url
+			size:(CGSize){ self.iconSize, self.iconSize }
+			scale:2.0
+			representationTypes:QLThumbnailGenerationRequestRepresentationTypeThumbnail];
+		[[QLThumbnailGenerator sharedGenerator] generateBestRepresentationForRequest:request
+			completionHandler:^(QLThumbnailRepresentation * _Nullable rep, NSError * _Nullable error) {
+				if (!rep)
+					return;
+				dispatch_async(dispatch_get_main_queue(), ^{
+						self.icon = rep.NSImage;
+						self.needsDisplay = YES;
+				});
+			}];
 	} else
 		icon = [NSImage imageNamed:NSImageNameMultipleDocuments];
 
@@ -67,7 +83,10 @@ static NSRect DTCenterRect(NSRect baseRect, CGFloat rectDim) {
 		NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:url];
 		NSImage *icon;
 		CGFloat iconSize = self.iconSize;
-		[url getResourceValue:&icon forKey:NSURLEffectiveIconKey error:nil];
+		if (self.URLs.count == 1)
+			icon = self.icon; // may be the loaded thumbnail by now
+		else
+			[url getResourceValue:&icon forKey:NSURLEffectiveIconKey error:nil];
 
 		item.draggingFrame = DTCenterRect(self.bounds, iconSize);
 

@@ -13,7 +13,7 @@
 
         buildPhase = ''
           runHook preBuild
-          clang -fobjc-arc -framework Cocoa -framework ApplicationServices \
+          clang -fobjc-arc -framework Cocoa -framework ApplicationServices -framework QuickLookThumbnailing \
             dragterm/main.m dragterm/DTDraggingSourceView.m \
             -o drag
           runHook postBuild
