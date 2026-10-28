@@ -10,7 +10,7 @@
 
       packages.drag = pkgs.stdenv.mkDerivation rec {
         pname = "drag";
-        version = "1.1.0";
+        version = "1.1.2";
 
         src = ./..;
 
