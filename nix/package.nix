@@ -1,10 +1,13 @@
 {
   perSystem =
     {
+      config,
       pkgs,
       ...
     }:
     {
+      packages.default = config.packages.drag;
+
       packages.drag = pkgs.stdenv.mkDerivation {
         pname = "drag";
         version = "1.1.0";
