@@ -12,6 +12,8 @@ a view no longer works on current macOS).
 
 - **Cursor-following icon.** The icon tracks your cursor so you can position it
   freely before dropping, no need to hold the button while moving.
+- **Content thumbnails.** For a single file the icon is a QuickLook thumbnail
+  (image, PDF, or video preview) when one exists; otherwise the file's icon.
 - **Shift to passthrough.** Hold **Shift** to fade the icon and let clicks pass
   through to whatever is behind it (Finder, desktop, other apps). Release Shift
   to bring the icon back and drop.
@@ -125,11 +127,13 @@ drag = inputs.dragterm.packages.${final.stdenv.hostPlatform.system}.drag;
 
 `drag` creates a transparent, borderless window centered on the cursor and
 runs it as a background (accessory) app so the terminal keeps keyboard focus.
-The window recenters on the cursor each event tick, so the file icon follows
-your mouse without holding a button. Holding Shift toggles
-`ignoresMouseEvents` and fades the window so clicks reach apps behind it. A
-mouse-down on the icon starts a standard `NSDraggingSession` to perform the
-actual drop.
+A 60 Hz timer recenters the window on the cursor, so the file icon follows
+your mouse without holding a button - and keeps following across Spaces,
+where event delivery to a background app is unreliable. For single files the
+icon is swapped for a QuickLook content thumbnail when one is available.
+Holding Shift toggles `ignoresMouseEvents` and fades the window so clicks
+reach apps behind it. A mouse-down on the icon starts a standard
+`NSDraggingSession` to perform the actual drop.
 
 ## License
 
